@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LibiShelf</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1c2430;--mu:#6b7686;--ac:#2f6fed;--bd:#dde1e8;--red:#e5484d;--yel:#f5b82e;--grn:#2f9e63;box-sizing:border-box}
+:root[data-theme=dark]{--bg:#12161c;--card:#1b212a;--tx:#e8ecf1;--mu:#93a0b2;--bd:#2b3441;--ac:#5b8cff}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#12161c;--card:#1b212a;--tx:#e8ecf1;--mu:#93a0b2;--bd:#2b3441;--ac:#5b8cff}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;display:flex}
+nav{background:var(--card);border-right:1px solid var(--bd);padding:10px 8px;display:flex;flex-direction:column;gap:6px;width:62px;transition:width .2s;overflow:hidden;flex:none;padding-top:max(10px,env(safe-area-inset-top))}
+nav.open{width:190px}
+nav button{display:flex;align-items:center;gap:12px;border:0;background:none;color:var(--tx);padding:11px 14px;border-radius:10px;font-size:15px;cursor:pointer;white-space:nowrap;text-align:left}
+nav button.on{background:var(--ac);color:#fff}nav button span.i{font-size:20px;width:22px;text-align:center}
+main{flex:1;overflow:auto;padding:18px;padding-top:max(18px,env(safe-area-inset-top));min-width:0}
+h1{margin:0 0 14px;font-size:22px}h3{margin:16px 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.stat b{display:block;font-size:28px}.stat span,.mu{color:var(--mu);font-size:13px}
+input,select,textarea,.btn{font:inherit;padding:10px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--card);color:var(--tx);max-width:100%}
+input,textarea{width:100%}.btn{background:var(--ac);color:#fff;border:0;cursor:pointer;width:auto}
+.btn.g{background:var(--card);color:var(--tx);border:1px solid var(--bd)}.btn.r{background:var(--red)}
+.row{display:flex;gap:12px;align-items:center;padding:10px;background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.row.red{border-left:6px solid var(--red)}.row.yel{border-left:6px solid var(--yel)}
+.cv{width:44px;height:64px;border-radius:5px;background:var(--bd);flex:none;object-fit:cover}
+.grow{flex:1;min-width:0}.t{font-weight:600}
+.tag{font-size:12px;padding:2px 8px;border-radius:20px;color:#fff;background:var(--mu);display:inline-block;margin-right:4px}
+.tag.g{background:var(--grn)}.tag.r{background:var(--red)}.tag.y{background:var(--yel);color:#000}
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow:auto}.tabs button{padding:9px 14px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:9px;cursor:pointer;white-space:nowrap}
+.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.scan{border:2px dashed var(--ac);border-radius:14px;padding:34px 10px;text-align:center;margin-bottom:12px;cursor:pointer}
+.scan div{font-size:44px}
+.ov{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.ov .card{max-width:520px;width:100%;max-height:85vh;overflow:auto}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--grn);color:#fff;padding:12px 20px;border-radius:10px;display:none;z-index:10}
+.hid{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.sug button{margin:4px 4px 0 0}.fl{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+:root{--ac:#6d5ef0;--bg:#f2f0fb;--bd:#e3e0f2}
+nav{background:linear-gradient(180deg,#2a1f6b,#5b3fc4);border:0;box-shadow:4px 0 20px #0002}
+nav button{color:#ffffffcc;transition:.15s}nav button:hover{background:#ffffff22;color:#fff}nav button.on{background:#fff;color:#4a30b0;font-weight:600}
+main{padding:22px}h1{font-size:28px;letter-spacing:-.5px}
+.card,.row{border-radius:16px;box-shadow:0 2px 10px #2a1f6b14}.row{transition:.15s}.row:hover{transform:translateY(-2px);box-shadow:0 6px 18px #2a1f6b26}
+.btn{background:linear-gradient(135deg,#6d5ef0,#9b4fe0);border-radius:10px;font-weight:600;box-shadow:0 3px 10px #6d5ef055}.btn.g{background:var(--card);box-shadow:none}.btn.r{background:var(--red)}
+.tabs button.on{background:linear-gradient(135deg,#6d5ef0,#9b4fe0);border-color:transparent}
+.hero{background:linear-gradient(135deg,#4a30b0,#b05cf0);color:#fff;border-radius:20px;padding:24px;margin-bottom:16px}.hero h1{margin:0 0 4px;color:#fff}
+.stat{position:relative;overflow:hidden}.stat b{font-size:32px;background:linear-gradient(135deg,#6d5ef0,#c05cf0);-webkit-background-clip:text;background-clip:text;color:transparent}.stat i{position:absolute;right:10px;top:8px;font-size:26px;font-style:normal;opacity:.4}
+.cv{position:relative;overflow:hidden;width:52px;height:76px;border-radius:6px;flex:none;box-shadow:0 3px 8px #0004;color:#fff;display:flex;align-items:flex-end;padding:4px;font-size:7px;font-weight:700;line-height:1.1}.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bkg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px;margin-top:6px}.bk{cursor:pointer;transition:.15s}.bk:hover{transform:translateY(-4px)}.bk .cv{width:100%;height:auto;aspect-ratio:2/3;font-size:14px;padding:10px;margin-bottom:8px}
+.bigw .cv{width:110px;height:162px;font-size:12px;padding:8px}
+.lb{transition:.25s;white-space:nowrap}nav:not(.open) .lb{opacity:0;width:0;margin-left:-12px}
+nav button .i{transition:.25s}nav button:hover .i{transform:scale(1.25) rotate(-8deg)}nav button{overflow:hidden}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.88) translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}}
+@keyframes slide{from{opacity:0;transform:translate(-50%,30px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #6d5ef055}50%{box-shadow:0 0 0 14px #6d5ef000}}
+@keyframes shift{50%{background-position:100% 50%}}
+main>*{animation:up .45s backwards}.grid>*,.bkg>*,.row{animation:up .5s backwards}
+.ov{animation:fade .2s}.ov .card{animation:pop .35s cubic-bezier(.2,1.3,.4,1)}
+#toast{animation:slide .35s;border-radius:30px;box-shadow:0 8px 24px #0004;font-weight:600}
+.btn{transition:.15s}.btn:active{transform:scale(.94)}.btn:hover{filter:brightness(1.1)}
+.scan{animation:pulse 2s infinite;transition:.2s}.scan:hover{background:#6d5ef012}.scan div{display:inline-block;animation:up 1.2s infinite alternate}
+.hero{background-size:200% 200%;animation:shift 10s ease infinite}
+.bk .cv{transition:.3s}.bk:hover .cv{transform:scale(1.05) rotate(-1.5deg);box-shadow:0 14px 28px #0006}
+.tabs button{transition:.2s}.tag{transition:.2s}
+.fl2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.lbl{background:#fff;color:#000;border:1px dashed #999;padding:8px;text-align:center;font-size:12px;border-radius:6px;break-inside:avoid}
+.scan .scg{position:relative;width:120px;height:80px;margin:0 auto 10px;animation:none;display:block;color:var(--tx)}.scg i{position:absolute;left:8px;right:8px;height:3px;border-radius:3px;background:#ff3b4e;box-shadow:0 0 14px 2px #ff3b4e;animation:laser 1.5s ease-in-out infinite alternate}
+@keyframes laser{from{top:10px}to{top:66px}}
+@keyframes grow{from{transform:scaleY(0)}}.dbar{transform-origin:bottom;animation:grow .6s backwards}
+/* v7 palette: calm library green + cream + gold */
+:root{--bg:#f5f2ea;--bd:#e6e0d2;--ac:#0f7b6c;--tx:#1d2a27;--mu:#6c766f}
+:root[data-theme=dark]{--ac:#37c2a3}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--ac:#37c2a3}}
+nav{background:linear-gradient(180deg,#0f2e2a,#1a4a41);box-shadow:4px 0 20px #0f2e2a33}nav button.on{background:#f5ecd6;color:#0f2e2a}
+.card,.row{box-shadow:0 2px 10px #1d2a2714}.row:hover{box-shadow:0 6px 18px #1d2a2724}
+.btn{background:linear-gradient(135deg,#0f7b6c,#15a086);box-shadow:0 3px 10px #0f7b6c44}.btn.g{background:var(--card);box-shadow:none}.btn.r{background:var(--red);box-shadow:none}
+.tabs button.on{background:linear-gradient(135deg,#0f7b6c,#15a086);border-color:transparent}
+.hero{background:linear-gradient(135deg,#0f2e2a,#1f7a6d,#0f2e2a);background-size:200% 200%}
+.stat b{background:linear-gradient(135deg,#0f7b6c,#d99a2b);-webkit-background-clip:text;background-clip:text}
+.scan:hover{background:#0f7b6c12}.scg g[stroke]{stroke:var(--ac)}.dbar{background:linear-gradient(#15a086,#0f7b6c)!important}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #0f7b6c44}50%{box-shadow:0 0 0 14px #0f7b6c00}}
+@media print{body>nav,body>main,#toast,.noprint{display:none!important}body{display:block;background:#fff}.ov{position:static;display:block;padding:0;background:none;animation:none}.ov .card{background:#fff;box-shadow:none;border:0;max-width:none!important;max-height:none;overflow:visible;animation:none}}
+</style></head><body>
+<nav id="nav"></nav><main id="main"></main><div id="toast"></div>
+<script>
+/* ===== DATA LAYER: swap these two methods for fetch() calls to a server later ===== */
+const KEY='confLib_v1';
+const Api={load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}},
+ save(d){try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}};
+/* db.registry = SHARED conference-wide proofreading records (by ISBN). Everything else is per-library. */
+function seed(){const t=Date.now(),d=n=>new Date(t+n*864e5).toISOString().slice(0,10);
+ return{settings:{theme:'auto',lib:'LMS Library',days:14},
+ books:{'9780743273565':{isbn:'9780743273565',title:'The Great Gatsby',author:'F. Scott Fitzgerald',cover:''},
+  '9780061120084':{isbn:'9780061120084',title:'To Kill a Mockingbird',author:'Harper Lee',cover:''}},
+ registry:{'9780743273565':{status:'approved',by:'Mrs. Reed (LMS Library)',date:d(-30),summary:'Jazz-age tragedy of wealth and longing. Contains some drinking and an affair; suitable for upper grades.'},
+  '9780061120084':{status:'pending',by:null,assigned:null,summary:''}},
+ catalog:['9780743273565','9780061120084'],
+ patrons:[{id:1,name:'Kohn, Ruth',info:'Grade 10'},{id:2,name:'Miller, Sam',info:'Grade 8'}],
+ loans:[{id:1,isbn:'9780743273565',patron:1,out:d(-10),due:d(2),back:null}],
+ proofreaders:[{id:1,name:'Mrs. Reed',church:'LMS Library'},{id:2,name:'Mr. Yoder',church:'Grace Fellowship'}]}}
+let db=Api.load()||seed();const save=()=>Api.save(db);save();
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let view='dash',tab='out',ptab='add',selPr=null,cart=[],recent=[],cur=null;
+const NAV=[['dash','▦','Dashboard'],['books','📚','Books'],['add','＋','Add Book'],['lend','⇄','Lending'],['proof','✔','Proofreading'],['set','⚙','Settings']];
+function toast(m,c){const t=$('#toast');t.textContent=m;t.style.background=c||'';t.style.display='block';setTimeout(()=>t.style.display='none',1800)}
+function theme(){document.documentElement.dataset.theme=db.settings.theme==='auto'?'':db.settings.theme}
+const book=i=>db.books[i]||{title:i,author:'',cover:''};
+const loanOf=i=>db.loans.find(l=>l.isbn===i&&!l.back);
+const pat=id=>db.patrons.find(p=>p.id===id)||{name:'?'};
+const left=d=>Math.ceil((new Date(d+'T23:59:59')-Date.now())/864e5);
+const cov=i=>{const b=book(i),h=Math.abs([...String(i)].reduce((a,c)=>a*31+c.charCodeAt(0)|0,7))%360;return`<div class="cv" style="background:linear-gradient(145deg,hsl(${h},62%,46%),hsl(${(h+45)%360},66%,28%))"><span>${esc(b.title)}</span>${b.cover?`<img src="${esc(b.cover)}" onerror="this.remove()">`:''}</div>`};
+function proofTag(i){const r=db.registry[i];if(!r)return'<span class="tag">Not proofread</span>';
+ return r.status==='approved'?'<span class="tag g">Approved</span>':'<span class="tag y">Proofreading in progress</span>'}
+function nav(){$('#nav').innerHTML=`<button onclick="$('#nav').classList.toggle('open')"><span class="i">☰</span></button>`+
+ NAV.map(n=>`<button class="${view===n[0]?'on':''}" onclick="go('${n[0]}')"><span class="i">${n[1]}</span><span class="lb">${n[2]}</span></button>`).join('')}
+function go(v){view=v;render()}
+function render(){nav();theme();$('#main').innerHTML=V[view]();if(V[view+'_']) V[view+'_']()}
+const tabs=(arr,cur,fn)=>`<div class="tabs">${arr.map(a=>`<button class="${a[0]===cur?'on':''}" onclick="${fn}('${a[0]}')">${a[1]}</button>`).join('')}</div>`;
+const V={};
+/* ---------- Dashboard ---------- */
+V.dash=()=>{const out=db.loans.filter(l=>!l.back),od=out.filter(l=>left(l.due)<0).length;
+ const st=(n,l)=>`<div class="card stat"><b>${n}</b><span>${l}</span></div>`;
+ const reg=Object.values(db.registry);
+ return`<h1>${esc(db.settings.lib)} Dashboard</h1><div class="grid">${st(db.catalog.length,'Books in catalog')}${st(out.length,'Checked out')}${st(od,'Overdue')}${st(db.patrons.length,'Patrons')}${st(db.loans.length,'Total checkouts')}${st(db.proofreaders.length,'Proofreaders')}${st(reg.filter(r=>r.status==='approved').length,'Approved (conference)')}${st(reg.filter(r=>r.status!=='approved').length,'Pending proofreading')}</div>
+ <p><button class="btn" onclick="exportXls()">⬇ Download Excel (.xls)</button></p>`};
+function exportXls(){const tb=(n,h,r)=>`<h3>${n}</h3><table border=1><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.map(x=>`<tr>${x.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`;
+ const h='<html><body>'+tb('Books',['ISBN','Title','Author','Proofread status','Proofread by'],db.catalog.map(i=>[i,book(i).title,book(i).author,(db.registry[i]||{}).status||'none',(db.registry[i]||{}).by||'']))
+ +tb('Patrons',['Name','Info'],db.patrons.map(p=>[p.name,p.info]))
+ +tb('Loans',['Book','Patron','Out','Due','Returned'],db.loans.map(l=>[book(l.isbn).title,pat(l.patron).name,l.out,l.due,l.back||'']))+'</body></html>';
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'application/vnd.ms-excel'}));a.download='library-export.xls';a.click()}
+/* ---------- Books ---------- */
+V.books=()=>`<h1>Books</h1><input id="bq" placeholder="Search title, author, ISBN…" oninput="bres()"><div id="bres" style="margin-top:12px"></div>`;
+V.books_=()=>bres();
+function bres(){const q=($('#bq')||{value:''}).value.toLowerCase();
+ $('#bres').innerHTML=db.catalog.filter(i=>(i+book(i).title+book(i).author).toLowerCase().includes(q)).map(i=>{const l=loanOf(i);
+ return`<div class="row" onclick="detail('${i}')">${cov(i)}<div class="grow"><div class="t">${esc(book(i).title)}</div><div class="mu">${esc(book(i).author)} · ${i}</div>
+ ${l?`<span class="tag r">Out: ${esc(pat(l.patron).name)} (due ${l.due})</span>`:'<span class="tag g">Available</span>'}${proofTag(i)}</div></div>`}).join('')||'<p class="mu">No books found.</p>'}
+function detail(i){const r=db.registry[i],h=db.loans.filter(l=>l.isbn===i).reverse();
+ const o=document.createElement('div');o.className='ov';o.onclick=e=>{if(e.target===o)o.remove()};
+ o.innerHTML=`<div class="card"><div class="row" style="cursor:default">${cov(i)}<div class="grow"><div class="t">${esc(book(i).title)}</div><div class="mu">${esc(book(i).author)}<br>ISBN ${i}</div></div></div>
+ <h3>Proofreading</h3>${r?(r.status==='approved'?`<p>${proofTag(i)} by ${esc(r.by)} on ${r.date}</p><p>${esc(r.summary)}</p>`:'<p>'+proofTag(i)+'</p>'):'<p>'+proofTag(i)+'</p>'}
+ <h3>Checkout history</h3>${h.map(l=>`<div class="mu">${esc(pat(l.patron).name)} — ${l.out} → ${l.back||'<b>not returned</b>'}</div>`).join('')||'<span class="mu">Never checked out.</span>'}
+ <p><button class="btn g" onclick="this.closest('.ov').remove()">Close</button></p></div>`;document.body.appendChild(o)}
+/* ---------- Add Book ---------- */
+V.add=()=>`<h1>Add Book</h1><div class="fl"><input id="isbn" placeholder="Enter ISBN" inputmode="numeric" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')lookup()"><button class="btn" onclick="lookup()">Search</button></div><div id="addres"></div>`;
+async function lookup(){const i=$('#isbn').value.replace(/[^0-9Xx]/g,'');if(!i)return;const out=$('#addres');out.innerHTML='<p class="mu">Searching Open Library…</p>';cur=null;
+ try{const r=await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${i}&format=json&jscmd=data`);const d=(await r.json())['ISBN:'+i];
+  if(d)cur={isbn:i,title:d.title,author:(d.authors||[]).map(a=>a.name).join(', '),cover:(d.cover||{}).medium||`https://covers.openlibrary.org/b/isbn/${i}-M.jpg`}}catch(e){}
+ if(!cur){const ex=db.books[i];cur=ex?{...ex}:{isbn:i,title:'',author:'',cover:'',manual:true}}
+ showAdd()}
+function showAdd(){const c=cur,r=db.registry[c.isbn],mine=db.catalog.includes(c.isbn);
+ let st;if(r&&r.status==='approved')st=`<p>${proofTag(c.isbn)} Proofread by <b>${esc(r.by)}</b> (${r.date})</p><p>${esc(r.summary)}</p><button class="btn" ${mine?'disabled':''} onclick="addCat()">${mine?'Already in your catalog':'Agree &amp; add to my catalog'}</button>`;
+ else if(r)st=`<p>${proofTag(c.isbn)}</p><button class="btn" ${mine?'disabled':''} onclick="addCat()">${mine?'Already in your catalog':'Add to my catalog (pending)'}</button>`;
+ else st=`<p>${proofTag(c.isbn)} Nobody in the conference has proofread this yet.</p><button class="btn" onclick="queue()">Add to proofreading list</button>`;
+ $('#addres').innerHTML=`<div class="card">${c.manual?`<p class="mu">Couldn't fetch details (offline or not found). Enter them manually:</p><input id="mt" placeholder="Title" value="${esc(c.title)}" oninput="cur.title=this.value"><br><br><input id="ma" placeholder="Author" value="${esc(c.author)}" oninput="cur.author=this.value"><br><br>`:`<div class="row" style="cursor:default">${cov(c.isbn)}<div><div class="t">${esc(c.title)}</div><div class="mu">${esc(c.author)} · ${c.isbn}</div></div></div>`}${st}</div>`;
+ if(!db.books[c.isbn])window._tmp=1}
+function addCat(){if(!cur.title)return toast('Enter a title first','var(--red)');db.books[cur.isbn]={isbn:cur.isbn,title:cur.title,author:cur.author,cover:cur.cover};
+ if(!db.catalog.includes(cur.isbn))db.catalog.push(cur.isbn);save();toast('Added to catalog');showAdd()}
+function queue(){if(!cur.title)return toast('Enter a title first','var(--red)');db.registry[cur.isbn]={status:'pending',by:null,assigned:null,summary:''};addCat();toast('Added to proofreading list')}
+/* ---------- Lending ---------- */
+V.lend=()=>`<h1>Lending</h1>`+tabs([['out','Check Out'],['in','Check In'],['list','Checked Out'],['pat','Patrons']],tab,'setTab')+L[tab]();
+V.lend_=()=>{L[tab+'_']&&L[tab+'_']();const s=$('#scan');if(s)s.focus()};
+function setTab(t){tab=t;render()}
+const L={};
+const today=()=>new Date().toISOString().slice(0,10),addDays=n=>new Date(Date.now()+n*864e5).toISOString().slice(0,10);
+L.out=()=>`<div class="scan" onclick="$('#scan').focus()"><div>▮▯▮▯▮</div>Please begin scanning to check out</div>
+ <input id="scan" class="hid" autocomplete="off" onkeydown="if(event.key==='Enter'){scanOut(this.value);this.value=''}">
+ <div class="fl"><input id="man" placeholder="No scanner? Type ISBN + Enter" style="max-width:260px" onkeydown="if(event.key==='Enter'){scanOut(this.value);this.value=''}">
+ <label class="mu">Due date <input type="date" id="due" value="${addDays(db.settings.days)}" style="width:auto"></label></div>
+ <div id="cart">${cartH()}</div>
+ <h3>Finish checkout</h3><input id="pq" placeholder="Patron name (type a letter…)" oninput="psug()"><div class="sug" id="psug"></div>`;
+const cartH=()=>cart.map(i=>`<div class="row" style="cursor:default">${cov(i)}<div class="grow t">${esc(book(i).title)}</div><button class="btn g" onclick="cart=cart.filter(x=>x!=='${i}');render()">✕</button></div>`).join('');
+function scanOut(v){const i=v.replace(/[^0-9Xx]/g,'');if(!i)return;
+ if(!db.catalog.includes(i))return toast('Not in catalog','var(--red)');if(loanOf(i))return toast('Already checked out','var(--red)');
+ if(cart.includes(i))return;cart.push(i);$('#cart').innerHTML=cartH();toast('Scanned: '+book(i).title)}
+function psug(){const q=$('#pq').value.toLowerCase();$('#psug').innerHTML=q?db.patrons.filter(p=>p.name.toLowerCase().includes(q)).slice(0,6).map(p=>`<button class="btn g" onclick="finish(${p.id})">${esc(p.name)}</button>`).join(''):''}
+function finish(pid){if(!cart.length)return toast('Scan books first','var(--red)');const due=$('#due').value;
+ cart.forEach(i=>db.loans.push({id:Date.now()+Math.random(),isbn:i,patron:pid,out:today(),due,back:null}));save();
+ toast(`Success! ${cart.length} book(s) checked out to ${pat(pid).name}`);cart=[];setTimeout(render,1200)}
+L.in=()=>`<div class="scan" onclick="$('#scan').focus()"><div>▮▯▮▯▮</div>Please begin scanning books</div>
+ <input id="scan" class="hid" autocomplete="off" onkeydown="if(event.key==='Enter'){scanIn(this.value);this.value=''}">
+ <input id="man" placeholder="No scanner? Type ISBN + Enter" style="max-width:260px" onkeydown="if(event.key==='Enter'){scanIn(this.value);this.value=''}">
+ <h3>Recently checked in</h3><div id="rec">${recH()}</div>`;
+const recH=()=>recent.map(i=>`<div class="row" style="cursor:default">${cov(i)}<div class="t">${esc(book(i).title)}</div></div>`).join('')||'<p class="mu">Nothing yet.</p>';
+function scanIn(v){const i=v.replace(/[^0-9Xx]/g,''),l=loanOf(i);if(!l)return toast('Not checked out','var(--red)');
+ l.back=today();save();recent.unshift(i);recent=recent.slice(0,3);$('#rec').innerHTML=recH();toast('Checked in: '+book(i).title)}
+L.list=()=>`<input id="lq" placeholder="Search by book or patron…" oninput="lres()"><div id="lres" style="margin-top:12px"></div>`;
+L.list_=()=>lres();
+function lres(){const q=$('#lq').value.toLowerCase();
+ $('#lres').innerHTML=db.loans.filter(l=>!l.back&&(book(l.isbn).title+pat(l.patron).name+l.isbn).toLowerCase().includes(q)).sort((a,b)=>a.due.localeCompare(b.due)).map(l=>{const d=left(l.due);
+ return`<div class="row ${d<0?'red':d<=5?'yel':''}" onclick="detail('${l.isbn}')">${cov(l.isbn)}<div class="grow"><div class="t">${esc(book(l.isbn).title)}</div><div class="mu">${esc(pat(l.patron).name)} · out ${l.out}</div></div><div>${d<0?`<b style="color:var(--red)">${-d}d overdue</b>`:`Due ${l.due} (${d}d)`}</div></div>`}).join('')||'<p class="mu">No checkouts.</p>'}
+L.pat=()=>`<div class="card"><div class="fl"><input id="pn" placeholder="Last, First" style="flex:1"><input id="pi" placeholder="Grade / contact" style="flex:1"><button class="btn" onclick="addPat()">Add patron</button></div></div>
+ <br><input id="pq2" placeholder="Search patrons…" oninput="pres()"><div id="pres" style="margin-top:12px"></div>`;
+L.pat_=()=>pres();
+function addPat(){const n=$('#pn').value.trim();if(!n)return;db.patrons.push({id:Date.now(),name:n,info:$('#pi').value});save();toast('Patron added');render()}
+function pres(){const q=$('#pq2').value.toLowerCase();$('#pres').innerHTML=db.patrons.filter(p=>p.name.toLowerCase().includes(q)).map(p=>{const n=db.loans.filter(l=>l.patron===p.id&&!l.back).length;
+ return`<div class="row" style="cursor:default"><div class="grow"><div class="t">${esc(p.name)}</div><div class="mu">${esc(p.info)}</div></div><span class="tag ${n?'y':''}">${n} out</span></div>`}).join('')}
+/* ---------- Proofreading ---------- */
+V.proof=()=>`<h1>Proofreading</h1>`+tabs([['add','Add Proofreader'],['man','Manage Proofreaders']],ptab,'setP')+(ptab==='add'?
+ `<div class="card"><div class="fl"><input id="rn" placeholder="Name" style="flex:1"><input id="rc" placeholder="Church / library" style="flex:1"><button class="btn" onclick="addPr()">Add</button></div></div>`:manage());
+function setP(t){ptab=t;selPr=null;render()}
+function addPr(){const n=$('#rn').value.trim();if(!n)return;db.proofreaders.push({id:Date.now(),name:n,church:$('#rc').value});save();toast('Proofreader added');render()}
+function manage(){const pend=Object.entries(db.registry).filter(([,r])=>r.status!=='approved');
+ if(selPr){const p=db.proofreaders.find(x=>x.id===selPr);const mine=pend.filter(([,r])=>r.assigned===selPr);
+  return`<p><button class="btn g" onclick="selPr=null;render()">← Back</button></p><h3>${esc(p.name)} <span class="mu">${esc(p.church)}</span></h3>`+
+  (mine.map(([i])=>`<div class="card" style="margin-bottom:8px"><div class="t">${esc(book(i).title)}</div><textarea id="s${i}" rows="3" placeholder="Write your summary of this book…"></textarea><p><button class="btn" onclick="approve('${i}')">Approve &amp; save to registry</button></p></div>`).join('')||'<p class="mu">No books assigned.</p>')+
+  `<h3>Unassigned pending books</h3>`+(pend.filter(([,r])=>!r.assigned).map(([i])=>`<div class="row" style="cursor:default">${cov(i)}<div class="grow t">${esc(book(i).title)}</div><button class="btn" onclick="assign('${i}')">Assign to ${esc(p.name)}</button></div>`).join('')||'<p class="mu">None.</p>')}
+ return db.proofreaders.map(p=>`<div class="row" onclick="selPr=${p.id};render()"><div class="grow"><div class="t">${esc(p.name)}</div><div class="mu">${esc(p.church)}</div></div><span class="tag y">${pend.filter(([,r])=>r.assigned===p.id).length} assigned</span></div>`).join('')+`<h3>All pending approval (${pend.length})</h3>`+pend.map(([i,r])=>`<div class="mu">• ${esc(book(i).title)} — ${r.assigned?'assigned':'unassigned'}</div>`).join('')}
+function assign(i){db.registry[i].assigned=selPr;save();render()}
+function approve(i){const s=$('#s'+i).value.trim();if(!s)return toast('Write a summary first','var(--red)');const p=db.proofreaders.find(x=>x.id===selPr);
+ Object.assign(db.registry[i],{status:'approved',by:`${p.name} (${p.church})`,date:today(),summary:s});save();toast('Approved — now visible to every library');render()}
+/* ---------- Settings ---------- */
+V.set=()=>`<h1>Settings</h1><div class="card"><p>Theme <select onchange="db.settings.theme=this.value;save();theme()">${['auto','light','dark'].map(t=>`<option ${db.settings.theme===t?'selected':''}>${t}</option>`).join('')}</select></p>
+ <p>Library name<br><input value="${esc(db.settings.lib)}" onchange="db.settings.lib=this.value;save()"></p>
+ <p>Default loan days<br><input type="number" value="${db.settings.days}" onchange="db.settings.days=+this.value;save()"></p>
+ <button class="btn r" onclick="ask('Reset all data to demo data?',()=>{db=seed();save();render()})">Reset demo data</button></div>`;
+render();
+</script><script>
+/* ===== v2 upgrades ===== */
+let bf='all';
+V.dash=()=>{const out=db.loans.filter(l=>!l.back),od=out.filter(l=>left(l.due)<0),reg=Object.values(db.registry);
+ const st=(n,l,ic)=>`<div class="card stat"><i>${ic}</i><b>${n}</b><span>${l}</span></div>`;
+ const cnt={};db.loans.forEach(l=>cnt[l.isbn]=(cnt[l.isbn]||0)+1);const pop=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ return`<div class="hero"><h1>${esc(db.settings.lib)}</h1><div>${od.length?`⚠ ${od.length} overdue book(s)`:'✔ Nothing overdue'} · ${out.length} checked out right now</div></div>
+ <div class="grid">${st(db.catalog.length,'Books in catalog','📚')}${st(out.length,'Checked out','📤')}${st(od.length,'Overdue','⏰')}${st(db.patrons.length,'Patrons','👥')}${st(db.loans.length,'Total checkouts','🔁')}${st(db.proofreaders.length,'Proofreaders','✍')}${st(reg.filter(r=>r.status==='approved').length,'Approved (conference)','✅')}${st(reg.filter(r=>r.status!=='approved').length,'Pending proofreading','⏳')}</div>
+ <p><button class="btn" onclick="exportXls()">⬇ Download Excel</button></p>
+ <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><div class="card"><b>🔥 Most popular</b><br><br>${pop.map(([i,n])=>`<div class="fl" style="align-items:center;flex-wrap:nowrap" onclick="detail('${i}')">${cov(i)}<div class="grow"><div class="t">${esc(book(i).title)}</div><span class="mu">${n} checkout(s)</span></div></div>`).join('')||'<span class="mu">No activity yet</span>'}</div>
+ <div class="card"><b>🕒 Recent activity</b>${db.loans.slice(-6).reverse().map(l=>`<div class="mu" style="margin:10px 0">${esc(pat(l.patron).name)} ${l.back?'returned':'borrowed'} <b>${esc(book(l.isbn).title)}</b> · ${l.back||l.out}</div>`).join('')}</div></div>`};
+V.books=()=>`<h1>Books</h1><input id="bq" placeholder="🔍 Search title, author, ISBN…" oninput="bres()"><div class="tabs" style="margin-top:12px">${[['all','All'],['in','Available'],['out','Checked out'],['ok','Approved'],['pend','Pending']].map(f=>`<button class="${bf===f[0]?'on':''}" onclick="bf='${f[0]}';render()">${f[1]}</button>`).join('')}</div><div id="bres" class="bkg"></div>`;
+function bres(){const q=($('#bq')||{value:''}).value.toLowerCase();
+ $('#bres').innerHTML=db.catalog.filter(i=>(i+book(i).title+book(i).author).toLowerCase().includes(q)).filter(i=>{const r=db.registry[i];return bf==='all'||(bf==='in'&&!loanOf(i))||(bf==='out'&&loanOf(i))||(bf==='ok'&&r&&r.status==='approved')||(bf==='pend'&&(!r||r.status!=='approved'))}).map(i=>{const l=loanOf(i);
+ return`<div class="bk" onclick="detail('${i}')">${cov(i)}<div class="t">${esc(book(i).title)}</div><div class="mu">${esc(book(i).author)}</div>${l?'<span class="tag r">Out</span>':'<span class="tag g">Available</span>'}${proofTag(i)}</div>`}).join('')||'<p class="mu">No books found.</p>'}
+function detail(i){const r=db.registry[i],h=db.loans.filter(l=>l.isbn===i).reverse(),l0=loanOf(i);
+ const o=document.createElement('div');o.className='ov';o.onclick=e=>{if(e.target===o)o.remove()};
+ o.innerHTML=`<div class="card"><div class="fl" style="flex-wrap:nowrap;align-items:flex-start"><div class="bigw">${cov(i)}</div><div class="grow"><input id="et" value="${esc(book(i).title)}"><br><br><input id="ea" value="${esc(book(i).author)}"><br><br><input id="eg" placeholder="Genre" value="${esc(book(i).genre||'')}"><br><br><input id="etg" placeholder="Tags: world war 2, history, biography" value="${esc((book(i).tags||[]).join(', '))}"><p class="mu">ISBN ${i}${book(i).bc?' · 🏷 '+esc(book(i).bc):''}${book(i).year?' · '+esc(book(i).year):''}${book(i).genre?' · '+esc(book(i).genre):''}${book(i).loc?'<br>📍 '+esc(book(i).loc):''}</p>${book(i).desc?'<p>'+esc(book(i).desc)+'</p>':''}${l0?`<span class="tag r">Out: ${esc(pat(l0.patron).name)} · due ${l0.due}</span>`:'<span class="tag g">Available</span>'}${proofTag(i)}</div></div>
+ <div class="fl"><button class="btn" onclick="saveB('${i}')">Save changes</button><button class="btn g" onclick="setCoverLink('${i}')">🔗 Cover link</button><button class="btn g" onclick="showLabels(['${i}'])">🖨 Barcode label</button></div>
+ <h3>Proofreading</h3>${r&&r.status==='approved'?`<p>Approved by <b>${esc(r.by)}</b> on ${r.date}</p><p>${esc(r.summary)}</p>`:'<p>'+proofTag(i)+'</p>'}
+ <h3>Checkout history</h3>${h.map(l=>`<div class="mu">${esc(pat(l.patron).name)} — ${l.out} → ${l.back||'<b>not returned</b>'}</div>`).join('')||'<span class="mu">Never checked out.</span>'}
+ <div class="fl" style="margin-top:16px"><button class="btn r" onclick="delBook('${i}')">🗑 Remove from catalog</button><button class="btn g" onclick="this.closest('.ov').remove()">Close</button></div></div>`;document.body.appendChild(o)}
+function saveB(i){db.books[i].title=$('#et').value;db.books[i].author=$('#ea').value;save();document.querySelector('.ov').remove();toast('Saved');render()}
+function delBook(i){if(loanOf(i))return toast('Check it in first','var(--red)');if(!confirm('Remove "'+book(i).title+'" from your catalog? (Its shared proofreading record is kept.)'))return;
+ db.catalog=db.catalog.filter(x=>x!==i);save();document.querySelector('.ov').remove();toast('Book removed');render()}
+function upCover(i,f){if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=300;c.height=im.height*300/im.width;c.getContext('2d').drawImage(im,0,0,c.width,c.height);db.books[i].cover=c.toDataURL('image/jpeg',.75);save();document.querySelector('.ov').remove();detail(i);if($('#bres'))bres()};im.src=r.result};r.readAsDataURL(f)}
+function lres(){const q=$('#lq').value.toLowerCase();
+ $('#lres').innerHTML=db.loans.map((l,x)=>[l,x]).filter(([l])=>!l.back&&(book(l.isbn).title+pat(l.patron).name+l.isbn).toLowerCase().includes(q)).sort((a,b)=>a[0].due.localeCompare(b[0].due)).map(([l,x])=>{const d=left(l.due);
+ return`<div class="row ${d<0?'red':d<=5?'yel':''}" onclick="detail('${l.isbn}')">${cov(l.isbn)}<div class="grow"><div class="t">${esc(book(l.isbn).title)}</div><div class="mu">${esc(pat(l.patron).name)} · out ${l.out}</div></div><div style="text-align:right">${d<0?`<b style="color:var(--red)">${-d}d overdue</b>`:`Due ${l.due} (${d}d)`}<br><button class="btn g" style="padding:5px 10px;margin-top:4px" onclick="event.stopPropagation();renew(${x})">↻ Renew</button></div></div>`}).join('')||'<p class="mu">No checkouts.</p>'}
+function renew(x){const l=db.loans[x],d=left(l.due)<0?new Date():new Date(l.due);d.setDate(d.getDate()+db.settings.days);l.due=d.toISOString().slice(0,10);save();toast('Renewed to '+l.due);lres()}
+function pres(){const q=$('#pq2').value.toLowerCase();$('#pres').innerHTML=db.patrons.filter(p=>p.name.toLowerCase().includes(q)).map(p=>{const n=db.loans.filter(l=>l.patron===p.id&&!l.back).length;
+ return`<div class="row" style="cursor:default"><div class="grow"><div class="t">${esc(p.name)}</div><div class="mu">${esc(p.info)}</div></div><span class="tag ${n?'y':''}">${n} out</span><button class="btn g" onclick="delPat(${p.id})">🗑</button></div>`}).join('')}
+function delPat(id){if(db.loans.some(l=>l.patron===id&&!l.back))return toast('Patron has books out','var(--red)');if(!confirm('Delete this patron?'))return;db.patrons=db.patrons.filter(p=>p.id!==id);save();pres()}
+render();
+</script><script>
+/* ===== v3 ===== */
+if(db.settings.fine==null){db.settings.fine=.1;save()}
+function stagger(){document.querySelectorAll('.grid>*,.bkg>*,#main .row').forEach((e,i)=>e.style.animationDelay=Math.min(i,24)*35+'ms')}
+function render(){nav();theme();$('#main').innerHTML=V[view]();if(V[view+'_'])V[view+'_']();stagger()}
+V.dash_=()=>document.querySelectorAll('.stat b').forEach(b=>{const n=+b.textContent;if(!(n>0))return;let s=null;const f=t=>{s=s||t;const p=Math.min((t-s)/800,1);b.textContent=Math.round(n*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)};requestAnimationFrame(f)});
+const fineOf=l=>Math.max(0,-left(l.due))*db.settings.fine;
+const _dash=V.dash;V.dash=()=>_dash()+`<br><div class="card">💰 <b>Fines owed:</b> $${db.loans.filter(l=>!l.back).reduce((a,l)=>a+fineOf(l),0).toFixed(2)} <span class="mu">(at $${db.settings.fine}/day per overdue book — change in Settings)</span></div>`;
+/* manual add */
+let addMode='look',manCover='';
+function setAdd(m){addMode=m;render()}
+const _add=V.add;
+V.add=()=>`<h1>Add Book</h1>`+tabs([['look','🔎 ISBN lookup'],['man','✍ Enter manually']],addMode,'setAdd')+'<div class="card" style="margin-bottom:12px"><b>🏷 Barcode</b> <span class="mu">— the label stuck on the physical book. Leave blank to auto-generate a 15-digit one, or type/scan your own.</span><input id="bcin" inputmode="numeric" placeholder="Auto-generate (15 digits)" style="margin-top:8px"></div>'+(addMode==='look'?_add().replace('<h1>Add Book</h1>',''):`<div class="card"><p class="mu">Fill in what you know — only title and author are required.</p><div class="fl2"><input id="mi" placeholder="ISBN (optional)"><input id="mt" placeholder="Title *"><input id="ma" placeholder="Author *"><input id="my" placeholder="Year"><input id="mg" placeholder="Genre (e.g. Fiction)"><input id="ml" placeholder="Shelf location"><input id="mp" type="number" placeholder="Pages"><input id="mtg" placeholder="Tags (comma separated)"></div><textarea id="ms" rows="3" placeholder="Description (optional)" style="margin-top:10px"></textarea><input id="mc" placeholder="Cover image link (optional — or leave blank to auto-use Open Library by ISBN)" style="margin-top:10px"><div class="fl"><button class="btn" onclick="saveMan(false)">Add to my catalog</button><button class="btn g" onclick="saveMan(true)">Add &amp; send to proofreading</button></div></div>`);
+function mCover(f){if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=300;c.height=im.height*300/im.width;c.getContext('2d').drawImage(im,0,0,c.width,c.height);manCover=c.toDataURL('image/jpeg',.75);$('#mcv').textContent='✔ photo added'};im.src=r.result};r.readAsDataURL(f)}
+function saveMan(q){const t=$('#mt').value.trim(),a=$('#ma').value.trim();if(!t||!a)return toast('Title and author are required','var(--red)');
+ const i=($('#mi').value.replace(/[^0-9Xx]/g,''))||'MAN'+Date.now();if(db.catalog.includes(i))return toast('That ISBN is already in your catalog','var(--red)');
+ db.books[i]={isbn:i,title:t,author:a,cover:manCover,year:$('#my').value,genre:$('#mg').value,loc:$('#ml').value,pages:$('#mp').value,desc:$('#ms').value};db.catalog.push(i);
+ if(q&&!db.registry[i])db.registry[i]={status:'pending',by:null,assigned:null,summary:''};save();manCover='';toast(q?'Added & sent to proofreading':'Book added');render()}
+/* patron profiles + reminders */
+function pprof(id){const p=db.patrons.find(x=>x.id===id),ls=db.loans.filter(l=>l.patron===id),out=ls.filter(l=>!l.back),fine=out.reduce((a,l)=>a+fineOf(l),0);
+ const o=document.createElement('div');o.className='ov';o.onclick=e=>{if(e.target===o)o.remove()};
+ o.innerHTML=`<div class="card"><h2 style="margin:0">${esc(p.name)}</h2><div class="mu">${esc(p.info)}</div><p><span class="tag ${out.length?'y':''}">${out.length} out</span><span class="tag">${ls.length} lifetime</span>${fine?`<span class="tag r">Fines $${fine.toFixed(2)}</span>`:''}</p>
+ <h3>Currently borrowed</h3>${out.map(l=>`<div class="mu">${esc(book(l.isbn).title)} — due ${l.due}${left(l.due)<0?' ⚠ overdue':''}</div>`).join('')||'<span class="mu">Nothing</span>'}
+ <h3>History</h3>${ls.slice().reverse().map(l=>`<div class="mu">${esc(book(l.isbn).title)} · ${l.out} → ${l.back||'out'}</div>`).join('')||'<span class="mu">No history</span>'}
+ <div class="fl" style="margin-top:14px">${out.some(l=>left(l.due)<0)?`<button class="btn" onclick="remind(${id})">📋 Copy overdue reminder</button>`:''}<button class="btn g" onclick="this.closest('.ov').remove()">Close</button></div></div>`;document.body.appendChild(o)}
+function remind(id){const p=db.patrons.find(x=>x.id===id),od=db.loans.filter(l=>l.patron===id&&!l.back&&left(l.due)<0);
+ const t=`Hi ${p.name}, these books from ${db.settings.lib} are overdue:\n`+od.map(l=>`- ${book(l.isbn).title} (due ${l.due})`).join('\n')+`\nPlease return them soon. Thank you!`;
+ try{navigator.clipboard.writeText(t).then(()=>toast('Reminder copied'),()=>prompt('Copy this reminder:',t))}catch(e){prompt('Copy this reminder:',t)}}
+function pres(){const q=$('#pq2').value.toLowerCase();$('#pres').innerHTML=db.patrons.filter(p=>p.name.toLowerCase().includes(q)).map(p=>{const n=db.loans.filter(l=>l.patron===p.id&&!l.back).length;
+ return`<div class="row" onclick="pprof(${p.id})"><div class="grow"><div class="t">${esc(p.name)}</div><div class="mu">${esc(p.info)}</div></div><span class="tag ${n?'y':''}">${n} out</span><button class="btn g" onclick="event.stopPropagation();delPat(${p.id})">🗑</button></div>`}).join('');stagger()}
+/* settings: fines + backup */
+const _set=V.set;V.set=()=>_set()+`<br><div class="card"><p>Late fine per day ($)<br><input type="number" step="0.05" value="${db.settings.fine}" onchange="db.settings.fine=+this.value;save()"></p></div><br><div class="card"><b>💾 Backup &amp; restore</b><p class="mu">Copy all your data, or paste a backup to restore it. This is the same data shape a server would store.</p><div class="fl"><button class="btn" onclick="backup()">Copy backup</button><button class="btn g" onclick="restore()">Restore from box</button></div><textarea id="bk" rows="3" placeholder="Backup appears here / paste one to restore"></textarea></div>`;
+function backup(){const t=JSON.stringify(db);$('#bk').value=t;$('#bk').select();try{navigator.clipboard.writeText(t)}catch(e){}toast('Backup ready')}
+function restore(){try{const d=JSON.parse($('#bk').value);if(!d.books||!d.catalog)throw 0;if(!confirm('Replace all current data?'))return;db=d;save();render();toast('Restored')}catch(e){toast('Not a valid backup','var(--red)')}}
+render();
+</script><script>
+/* ===== v4: barcodes, cover links, working delete ===== */
+const olCover=i=>`https://covers.openlibrary.org/b/isbn/${i}-M.jpg?default=false`;
+const gen15=()=>{let s;do s=String(2+Math.floor(Math.random()*8))+Array.from({length:14},()=>Math.floor(Math.random()*10)).join('');while(db.catalog.some(i=>book(i).bc===s));return s};
+function fixBc(){let ch=0;db.catalog.forEach(i=>{if(db.books[i]&&!db.books[i].bc){db.books[i].bc=gen15();ch=1}});if(ch)save()}
+function render(){fixBc();nav();theme();$('#main').innerHTML=V[view]();if(V[view+'_'])V[view+'_']();stagger()}
+/* in-page dialogs (browser confirm()/prompt() are blocked on hosted pages — that's why Delete did nothing) */
+function ask(m,cb){const o=document.createElement('div');o.className='ov';o.innerHTML=`<div class="card" style="max-width:380px"><p>${esc(m)}</p><div class="fl"><button class="btn r" id="ay">Yes</button><button class="btn g" id="an">Cancel</button></div></div>`;document.body.appendChild(o);o.querySelector('#ay').onclick=()=>{o.remove();cb()};o.querySelector('#an').onclick=()=>o.remove()}
+function askText(m,val,cb){const o=document.createElement('div');o.className='ov';o.innerHTML=`<div class="card" style="max-width:460px"><p>${esc(m)}</p><textarea id="at" rows="3">${esc(val)}</textarea><div class="fl"><button class="btn" id="ay">OK</button><button class="btn g" id="an">Close</button></div></div>`;document.body.appendChild(o);o.querySelector('#ay').onclick=()=>{const v=o.querySelector('#at').value;o.remove();cb(v)};o.querySelector('#an').onclick=()=>o.remove()}
+const closeAll=()=>document.querySelectorAll('.ov').forEach(e=>e.remove());
+function delBook(i){if(loanOf(i))return toast('Check it in first','var(--red)');ask(`Remove "${book(i).title}" from your catalog? (Its shared proofreading record is kept.)`,()=>{db.catalog=db.catalog.filter(x=>x!==i);save();closeAll();toast('Book removed');render()})}
+function delPat(id){if(db.loans.some(l=>l.patron===id&&!l.back))return toast('Patron has books out','var(--red)');ask('Delete this patron?',()=>{db.patrons=db.patrons.filter(p=>p.id!==id);save();pres();toast('Patron deleted')})}
+function restore(){let d;try{d=JSON.parse($('#bk').value);if(!d.books||!d.catalog)throw 0}catch(e){return toast('Not a valid backup','var(--red)')}ask('Replace all current data with this backup?',()=>{db=d;save();render();toast('Restored')})}
+function remind(id){const p=db.patrons.find(x=>x.id===id),od=db.loans.filter(l=>l.patron===id&&!l.back&&left(l.due)<0);
+ const t=`Hi ${p.name}, these books from ${db.settings.lib} are overdue:\n`+od.map(l=>`- ${book(l.isbn).title} (due ${l.due})`).join('\n')+`\nPlease return them soon. Thank you!`;
+ const fb=()=>askText('Copy this reminder:',t,()=>{});try{navigator.clipboard.writeText(t).then(()=>toast('Reminder copied'),fb)}catch(e){fb()}}
+function setCoverLink(i){const c=book(i).cover||'';askText('Paste a link to the cover image. A link takes almost no space. Leave empty to remove.',c.startsWith('data:')?'':c,v=>{db.books[i].cover=v.trim();save();closeAll();render();detail(i)})}
+/* barcodes (Code 39, digits) */
+function bars(c){const P={0:'nnnwwnwnn',1:'wnnwnnnnw',2:'nnwwnnnnw',3:'wnwwnnnnn',4:'nnnwwnnnw',5:'wnnwwnnnn',6:'nnwwwnnnn',7:'nnnwnnwnw',8:'wnnwnnwnn',9:'nnwwnnwnn','*':'nwnnwnwnn'};let x=10,r='';
+ for(const ch of '*'+c+'*'){[...(P[ch]||P[0])].forEach((e,k)=>{const w=e==='w'?3:1;if(k%2===0)r+=`<rect x="${x}" width="${w}" height="50" fill="#000"/>`;x+=w});x+=1}
+ return`<svg viewBox="0 0 ${x+9} 50" preserveAspectRatio="none" style="width:100%;height:60px"><rect width="${x+9}" height="50" fill="#fff"/>${r}</svg>`}
+function showLabels(list){if(!list.length)return toast('No books yet','var(--red)');const o=document.createElement('div');o.className='ov';o.onclick=e=>{if(e.target===o)o.remove()};
+ o.innerHTML=`<div class="card" style="max-width:760px"><div class="noprint"><h3 style="margin:0 0 6px">🖨 Print barcode labels</h3><p class="mu">Stick one on each book. If Print does nothing, press Ctrl+P (or ⌘P) while this page is open.</p><div class="fl"><button class="btn" onclick="window.print()">🖨 Print</button><button class="btn g" onclick="this.closest('.ov').remove()">Close</button></div></div><div class="fl2" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${list.map(i=>`<div class="lbl">${bars(book(i).bc)}<div style="font:600 13px monospace;letter-spacing:2px">${esc(book(i).bc)}</div><div>${esc(book(i).title.slice(0,34))}</div><div style="color:#555">${esc(db.settings.lib)}</div></div>`).join('')}</div></div>`;document.body.appendChild(o)}
+function takeBc(){const el=$('#bcin'),v=el?el.value.replace(/\s/g,''):'';if(!v)return gen15();if(!/^\d{6,20}$/.test(v)){toast('Barcode must be 6–20 digits','var(--red)');return null}if(db.catalog.some(i=>book(i).bc===v)){toast('That barcode is already used','var(--red)');return null}return v}
+const byCode=v=>{v=v.trim();const d=v.replace(/[^0-9Xx]/g,'');return db.catalog.find(i=>book(i).bc===v)||(db.catalog.includes(d)?d:null)};
+function scanOut(v){const i=byCode(v);if(!v.trim())return;if(!i)return toast('Barcode not in catalog','var(--red)');if(loanOf(i))return toast('Already checked out','var(--red)');if(cart.includes(i))return;cart.push(i);$('#cart').innerHTML=cartH();toast('Scanned: '+book(i).title)}
+function scanIn(v){const i=byCode(v),l=i&&loanOf(i);if(!v.trim())return;if(!l)return toast('Not checked out','var(--red)');l.back=today();save();recent.unshift(i);recent=recent.slice(0,3);$('#rec').innerHTML=recH();toast('Checked in: '+book(i).title)}
+const _lo=L.out,_li=L.in;L.out=()=>_lo().replace('Type ISBN','Type barcode');L.in=()=>_li().replace('Type ISBN','Type barcode');
+const _bk=V.books;V.books=()=>_bk().replace('<h1>Books</h1>','<h1>Books</h1><p><button class="btn g" onclick="showLabels(db.catalog)">🖨 Print all barcode labels</button></p>');
+function addCat(){if(!cur.title)return toast('Enter a title first','var(--red)');if(db.catalog.includes(cur.isbn))return;const bc=takeBc();if(!bc)return;
+ db.books[cur.isbn]={isbn:cur.isbn,title:cur.title,author:cur.author,cover:cur.cover||olCover(cur.isbn),bc};db.catalog.push(cur.isbn);save();toast('Added — print its barcode label');showAdd();showLabels([cur.isbn])}
+function queue(){addCat();if(db.catalog.includes(cur.isbn)&&!db.registry[cur.isbn]){db.registry[cur.isbn]={status:'pending',by:null,assigned:null,summary:''};save();showAdd()}}
+function saveMan(q){const t=$('#mt').value.trim(),a=$('#ma').value.trim();if(!t||!a)return toast('Title and author are required','var(--red)');
+ const raw=$('#mi').value.replace(/[^0-9Xx]/g,''),i=raw||'MAN'+Date.now();if(db.catalog.includes(i))return toast('That ISBN is already in your catalog','var(--red)');const bc=takeBc();if(!bc)return;
+ db.books[i]={isbn:i,title:t,author:a,cover:$('#mc').value.trim()||(raw?olCover(raw):''),bc,year:$('#my').value,genre:$('#mg').value,loc:$('#ml').value,pages:$('#mp').value,desc:$('#ms').value};db.catalog.push(i);
+ if(q&&!db.registry[i])db.registry[i]={status:'pending',by:null,assigned:null,summary:''};save();toast(q?'Added & sent to proofreading':'Book added');render();showLabels([i])}
+/* ===== v5: sturdier catalog lookup ===== */
+V.add_=()=>{const e=$('#isbn');if(e)e.focus()};
+async function lookup(){const i=$('#isbn').value.replace(/[^0-9Xx]/g,'');if(!i)return;const out=$('#addres');out.innerHTML='<p class="mu">Searching Open Library…</p>';cur=null;let blocked=false,note='';
+ const j=async u=>(await fetch(u)).json();
+ try{const d=(await j(`https://openlibrary.org/api/books?bibkeys=ISBN:${i}&format=json&jscmd=data`))['ISBN:'+i];if(d)cur={isbn:i,title:d.title,author:(d.authors||[]).map(a=>a.name).join(', '),cover:(d.cover&&d.cover.medium)||olCover(i)}}catch(e){blocked=true}
+ if(!cur&&!blocked)try{const d=(await j(`https://openlibrary.org/search.json?q=isbn:${i}&fields=title,author_name&limit=1`)).docs[0];if(d)cur={isbn:i,title:d.title,author:(d.author_name||[]).join(', '),cover:olCover(i)}}catch(e){blocked=true}
+ if(!cur&&!blocked)try{const d=((await j(`https://www.googleapis.com/books/v1/volumes?q=isbn:${i}`)).items||[])[0];if(d)cur={isbn:i,title:d.volumeInfo.title,author:(d.volumeInfo.authors||[]).join(', '),cover:olCover(i)}}catch(e){}
+ if(!cur){const ex=db.books[i];cur=ex?{...ex}:{isbn:i,title:'',author:'',cover:'',manual:true};note=blocked?'<div class="card" style="border-left:6px solid var(--red);margin-bottom:10px"><b>Can\'t reach the online catalog from this page.</b> This hosted preview blocks internet lookups. Download the file and open it on your computer and the Open Library search will work.</div>':'<div class="card" style="margin-bottom:10px">Not found in Open Library — enter the details below.</div>'}
+ showAdd();if(note)out.insertAdjacentHTML('afterbegin',note)}
+/* ===== v6 ===== */
+NAV.splice(5,0,['bar','🏷','Barcodes'],['rep','📊','Reports']);
+function nav(){$('#nav').innerHTML=`<button onclick="$('#nav').classList.toggle('open')"><span class="i">☰</span><span class="lb">📖 LibiShelf</span></button>`+NAV.map(n=>`<button class="${view===n[0]?'on':''}" onclick="go('${n[0]}')"><span class="i">${n[1]}</span><span class="lb">${n[2]}</span></button>`).join('')}
+const _d3=V.dash;V.dash=()=>_d3().replace('<div class="hero"><h1>','<div class="hero"><div style="opacity:.85;font-weight:700">📖 LibiShelf</div><h1>');
+/* scan graphic + Enter picks first patron */
+const scanSvg='<div class="scg"><svg viewBox="0 0 120 80" width="120" height="80"><g fill="none" stroke="#6d5ef0" stroke-width="5" stroke-linecap="round"><path d="M4 22V8a4 4 0 0 1 4-4h14M98 4h14a4 4 0 0 1 4 4v14M116 58v14a4 4 0 0 1-4 4H98M22 76H8a4 4 0 0 1-4-4V58"/></g><g fill="currentColor"><rect x="22" y="18" width="4" height="44"/><rect x="29" y="18" width="2" height="44"/><rect x="34" y="18" width="6" height="44"/><rect x="43" y="18" width="2" height="44"/><rect x="48" y="18" width="4" height="44"/><rect x="55" y="18" width="2" height="44"/><rect x="60" y="18" width="6" height="44"/><rect x="69" y="18" width="3" height="44"/><rect x="75" y="18" width="2" height="44"/><rect x="80" y="18" width="5" height="44"/><rect x="88" y="18" width="3" height="44"/><rect x="93" y="18" width="3" height="44"/></g></svg><i></i></div>';
+const _lo2=L.out,_li2=L.in;
+L.out=()=>_lo2().replace('<div>▮▯▮▯▮</div>',scanSvg).replace('oninput="psug()"',`oninput="psug()" onkeydown="if(event.key==='Enter')pfirst()"`);
+L.in=()=>_li2().replace('<div>▮▯▮▯▮</div>',scanSvg);
+function psug(){const q=$('#pq').value.toLowerCase();$('#psug').innerHTML=q?db.patrons.filter(p=>p.name.toLowerCase().includes(q)).slice(0,6).map((p,k)=>`<button class="btn ${k?'g':''}" onclick="finish(${p.id})">${esc(p.name)}${k?'':' ↵'}</button>`).join(''):''}
+function pfirst(){const q=$('#pq').value.toLowerCase(),p=q&&db.patrons.find(p=>p.name.toLowerCase().includes(q));if(p)finish(p.id);else toast('No patron found','var(--red)')}
+/* no checkout until approved */
+function scanOut(v){const i=byCode(v);if(!v.trim())return;if(!i)return toast('Barcode not in catalog','var(--red)');const r=db.registry[i];
+ if(!r||r.status!=='approved')return toast(r?'🚫 Awaiting proofreading — cannot be checked out yet':'🚫 Not proofread yet — cannot be checked out','var(--red)');
+ if(loanOf(i))return toast('Already checked out','var(--red)');if(cart.includes(i))return;cart.push(i);$('#cart').innerHTML=cartH();toast('Scanned: '+book(i).title)}
+/* search: tags, genres, synonyms */
+const nz=s=>String(s).toLowerCase().replace(/second world war|world war,? ?(1939-1945|2|ii|two)\b|\bww ?(2|ii)\b/g,'world war ii').replace(/first world war|world war,? ?(1914-1918|1|i|one)\b|\bww ?(1|i)\b/g,'world war i');
+const hay=i=>{const b=book(i);return nz([i,b.title,b.author,b.genre,(b.tags||[]).join(' '),b.desc].join(' '))};
+function bres(){const ws=nz(($('#bq')||{value:''}).value).split(/\s+/).filter(Boolean);
+ $('#bres').innerHTML=db.catalog.filter(i=>{const h=hay(i);return ws.every(w=>h.includes(w))}).filter(i=>{const r=db.registry[i];return bf==='all'||(bf==='in'&&!loanOf(i))||(bf==='out'&&loanOf(i))||(bf==='ok'&&r&&r.status==='approved')||(bf==='pend'&&(!r||r.status!=='approved'))}).map(i=>{const l=loanOf(i);
+ return`<div class="bk" onclick="detail('${i}')">${cov(i)}<div class="t">${esc(book(i).title)}</div><div class="mu">${esc(book(i).author)}</div>${l?'<span class="tag r">Out</span>':'<span class="tag g">Available</span>'}${proofTag(i)}</div>`}).join('')||'<p class="mu">No books found.</p>'}
+function chips(){const c={};db.catalog.forEach(i=>{const b=book(i);[b.genre,...(b.tags||[])].filter(Boolean).forEach(t=>{t=t.toLowerCase();c[t]=(c[t]||0)+1})});const top=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,14),el=$('#bres');
+ if(top.length&&el)el.insertAdjacentHTML('beforebegin','<div class="fl">'+top.map(([t,n])=>`<button class="btn g" style="padding:5px 12px;border-radius:20px" data-t="${esc(t)}" onclick="$('#bq').value=this.dataset.t;bres()">🏷 ${esc(t)} · ${n}</button>`).join('')+'</div>')}
+V.books_=()=>{bres();chips()};
+const _b2=V.books;V.books=()=>_b2().replace(/<p><button class="btn g" onclick="showLabels\(db\.catalog\)">[^<]*<\/button><\/p>/,'');
+function saveB(i){const b=db.books[i];b.title=$('#et').value;b.author=$('#ea').value;b.genre=$('#eg').value.trim();b.tags=$('#etg').value.split(',').map(s=>s.trim()).filter(Boolean);save();closeAll();toast('Saved');render()}
+async function lookup(){const i=$('#isbn').value.replace(/[^0-9Xx]/g,'');if(!i)return;const out=$('#addres');out.innerHTML='<p class="mu">Searching Open Library…</p>';cur=null;let blocked=false,note='';
+ const j=async u=>(await fetch(u)).json();
+ try{const d=(await j(`https://openlibrary.org/api/books?bibkeys=ISBN:${i}&format=json&jscmd=data`))['ISBN:'+i];if(d)cur={isbn:i,title:d.title,author:(d.authors||[]).map(a=>a.name).join(', '),cover:(d.cover&&d.cover.medium)||olCover(i),year:(d.publish_date||'').slice(-4),tags:(d.subjects||[]).slice(0,10).map(s=>s.name.toLowerCase())}}catch(e){blocked=true}
+ if(!cur&&!blocked)try{const d=(await j(`https://openlibrary.org/search.json?q=isbn:${i}&fields=title,author_name,subject&limit=1`)).docs[0];if(d)cur={isbn:i,title:d.title,author:(d.author_name||[]).join(', '),cover:olCover(i),tags:(d.subject||[]).slice(0,10).map(s=>s.toLowerCase())}}catch(e){blocked=true}
+ if(!cur&&!blocked)try{const d=((await j(`https://www.googleapis.com/books/v1/volumes?q=isbn:${i}`)).items||[])[0];if(d)cur={isbn:i,title:d.volumeInfo.title,author:(d.volumeInfo.authors||[]).join(', '),cover:olCover(i),tags:(d.volumeInfo.categories||[]).map(s=>s.toLowerCase())}}catch(e){}
+ if(!cur){const ex=db.books[i];cur=ex?{...ex}:{isbn:i,title:'',author:'',cover:'',manual:true};note=blocked?'<div class="card" style="border-left:6px solid var(--red);margin-bottom:10px"><b>Can\'t reach the online catalog from this page.</b> This hosted preview blocks internet lookups. Download the file and open it on your computer and the search will work.</div>':'<div class="card" style="margin-bottom:10px">Not found in Open Library — enter the details below.</div>'}
+ showAdd();if(note)out.insertAdjacentHTML('afterbegin',note)}
+function addCat(){if(!cur.title)return toast('Enter a title first','var(--red)');if(db.catalog.includes(cur.isbn))return;const bc=takeBc();if(!bc)return;
+ db.books[cur.isbn]={isbn:cur.isbn,title:cur.title,author:cur.author,cover:cur.cover||olCover(cur.isbn),year:cur.year||'',tags:cur.tags||[],genre:cur.genre||'',bc};db.catalog.push(cur.isbn);save();toast('Added — print its barcode label');showAdd();showLabels([cur.isbn])}
+function saveMan(q){const t=$('#mt').value.trim(),a=$('#ma').value.trim();if(!t||!a)return toast('Title and author are required','var(--red)');
+ const raw=$('#mi').value.replace(/[^0-9Xx]/g,''),i=raw||'MAN'+Date.now();if(db.catalog.includes(i))return toast('That ISBN is already in your catalog','var(--red)');const bc=takeBc();if(!bc)return;
+ db.books[i]={isbn:i,title:t,author:a,cover:$('#mc').value.trim()||(raw?olCover(raw):''),bc,year:$('#my').value,genre:$('#mg').value.trim(),tags:$('#mtg').value.split(',').map(s=>s.trim()).filter(Boolean),loc:$('#ml').value,pages:$('#mp').value,desc:$('#ms').value};db.catalog.push(i);
+ if(q&&!db.registry[i])db.registry[i]={status:'pending',by:null,assigned:null,summary:''};save();toast(q?'Added & sent to proofreading':'Book added');render();showLabels([i])}
+/* barcode page */
+let bsel=new Set();
+V.bar=()=>`<h1>Barcode Labels</h1><input id="bcq" placeholder="🔍 Search books…" oninput="barres()"><div class="fl"><button class="btn g" onclick="bsAll(1)">Select all shown</button><button class="btn g" onclick="bsAll(0)">Clear</button><button class="btn" onclick="printSel()">🖨 Print selected (<span id="bsn">${bsel.size}</span>)</button></div><div id="bres2"></div>`;
+V.bar_=()=>barres();
+const shownBc=()=>{const q=nz($('#bcq').value);return db.catalog.filter(i=>nz(i+book(i).title+book(i).author+book(i).bc).includes(q))};
+function barres(){$('#bres2').innerHTML=shownBc().map(i=>`<label class="row" style="cursor:pointer"><input type="checkbox" style="width:22px;height:22px;flex:none" ${bsel.has(i)?'checked':''} onchange="bsT('${i}',this.checked)">${cov(i)}<div class="grow"><div class="t">${esc(book(i).title)}</div><div class="mu">${esc(book(i).author)} · 🏷 ${esc(book(i).bc)}</div></div></label>`).join('')||'<p class="mu">No books.</p>';stagger()}
+function bsT(i,c){c?bsel.add(i):bsel.delete(i);$('#bsn').textContent=bsel.size}
+function bsAll(on){shownBc().forEach(i=>on?bsel.add(i):bsel.delete(i));barres();$('#bsn').textContent=bsel.size}
+function printSel(){const l=db.catalog.filter(i=>bsel.has(i));l.length?showLabels(l):toast('Tick at least one book','var(--red)')}
+/* delete proofreaders */
+function delPr(id){ask('Remove this proofreader? Books assigned to them go back to unassigned.',()=>{db.proofreaders=db.proofreaders.filter(p=>p.id!==id);Object.values(db.registry).forEach(r=>{if(r.assigned===id)r.assigned=null});selPr=null;save();toast('Proofreader removed');render()})}
+{const _m=manage;manage=()=>{const h=_m();if(selPr)return h.replace('← Back</button>',`← Back</button> <button class="btn r" onclick="delPr(${selPr})">🗑 Remove proofreader</button>`);return h.replace(/onclick="selPr=(\d+);render\(\)">([\s\S]*?assigned<\/span>)/g,(m,id,rest)=>`onclick="selPr=${id};render()">${rest}<button class="btn g" onclick="event.stopPropagation();delPr(${id})">🗑</button>`)}}
+/* reports */
+let rf=addDays(-30),rt=today();
+V.rep=()=>`<h1>Reports &amp; Activity</h1><div class="card"><div class="fl"><label class="mu">From <input type="date" value="${rf}" style="width:auto" onchange="rf=this.value;repres()"></label><label class="mu">To <input type="date" value="${rt}" style="width:auto" onchange="rt=this.value;repres()"></label><button class="btn g" onclick="setR(7)">7 days</button><button class="btn g" onclick="setR(30)">30 days</button><button class="btn g" onclick="setR(365)">1 year</button><button class="btn" onclick="exportRep()">⬇ Download Excel</button></div></div><br><div id="rep"></div>`;
+V.rep_=()=>repres();
+function setR(n){rf=addDays(-n);rt=today();render()}
+function repData(){const inR=d=>d&&d>=rf&&d<=rt,outs=db.loans.filter(l=>inR(l.out)),ins=db.loans.filter(l=>inR(l.back));
+ const rows=db.patrons.map(p=>{const o=db.loans.filter(l=>l.patron===p.id&&!l.back);return[p.name,outs.filter(l=>l.patron===p.id).length,ins.filter(l=>l.patron===p.id).length,o.length,o.filter(l=>left(l.due)<0).length,o.reduce((a,l)=>a+fineOf(l),0).toFixed(2)]}).sort((a,b)=>b[1]+b[2]-a[1]-a[2]);return{inR,outs,ins,rows}}
+function repres(){if(rf>rt)return $('#rep').innerHTML='<p class="mu">Start date is after the end date.</p>';const{outs,ins,rows}=repData();
+ const days=Math.round((new Date(rt)-new Date(rf))/864e5)+1,kept=ins.map(l=>Math.max(0,(new Date(l.back)-new Date(l.out))/864e5)),avg=kept.length?(kept.reduce((a,b)=>a+b,0)/kept.length).toFixed(1):'–';
+ const cnt=(arr,f)=>{const c={};arr.forEach(l=>{const k=f(l);c[k]=(c[k]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])};
+ const st=(n,l)=>`<div class="card stat"><b>${n}</b><span>${l}</span></div>`,od=db.loans.filter(l=>!l.back&&left(l.due)<0).length;
+ const dd=[];for(let k=0;k<Math.min(days,120);k++){const d=new Date(new Date(rf).getTime()+k*864e5).toISOString().slice(0,10);dd.push([d,outs.filter(l=>l.out===d).length])}const mx=Math.max(1,...dd.map(x=>x[1]));
+ const list=(a,f)=>a.slice(0,6).map(([k,n])=>`<div style="display:flex;justify-content:space-between;margin:8px 0"><span>${esc(f(k))}</span><b>${n}</b></div>`).join('')||'<span class="mu">No activity</span>';
+ $('#rep').innerHTML=`<div class="grid">${st(outs.length,'Checkouts')}${st(ins.length,'Returns')}${st(new Set(outs.concat(ins).map(l=>l.patron)).size,'Active patrons')}${st(avg,'Avg days kept')}${st(od,'Overdue now')}${st((outs.length/Math.max(days,1)).toFixed(1),'Checkouts / day')}</div><br>
+ <div class="card"><b>📈 Checkouts per day</b><div style="display:flex;align-items:flex-end;gap:3px;height:130px;margin-top:12px">${dd.map(([d,n])=>`<div class="dbar" title="${d}: ${n}" style="flex:1;height:${Math.max(3,n/mx*100)}%;background:linear-gradient(#9b4fe0,#6d5ef0);border-radius:4px 4px 0 0"></div>`).join('')}</div></div><br>
+ <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))"><div class="card"><b>📚 Top books</b><br>${list(cnt(outs,l=>l.isbn),k=>book(k).title)}</div><div class="card"><b>👤 Top patrons</b><br>${list(cnt(outs,l=>l.patron),k=>pat(+k).name)}</div><div class="card"><b>🏷 By genre</b><br>${list(cnt(outs,l=>book(l.isbn).genre||'Uncategorized'),k=>k)}</div></div><br>
+ <div class="card" style="overflow:auto"><b>Patron activity</b><table style="width:100%;border-collapse:collapse;margin-top:8px"><tr class="mu" style="text-align:left"><th>Patron</th><th>Out</th><th>In</th><th>Has now</th><th>Overdue</th><th>Fines</th></tr>${rows.map(r=>`<tr style="border-top:1px solid var(--bd)">${r.map((c,k)=>`<td style="padding:8px 4px">${k===5?'$':''}${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`}
+function exportRep(){const{outs,rows}=repData();const tb=(n,h,r)=>`<h3>${n}</h3><table border=1><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.map(x=>`<tr>${x.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table>`;
+ const h='<html><body>'+`<h2>${esc(db.settings.lib)} — ${rf} to ${rt}</h2>`+tb('Checkouts',['Date out','Due','Returned','Book','Genre','Patron'],outs.map(l=>[l.out,l.due,l.back||'',book(l.isbn).title,book(l.isbn).genre||'',pat(l.patron).name]))+tb('Patron activity',['Patron','Checkouts','Returns','Has now','Overdue','Fines $'],rows)+'</body></html>';
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h],{type:'application/vnd.ms-excel'}));a.download=`libishelf-report-${rf}-to-${rt}.xls`;a.click()}
+/* ===== v7: multi-version detailed reviews, hidden search keywords ===== */
+const CATS=[['lang','Language / bad words','Language'],['viol','Violence','Violence'],['sex','Sexual content & romance','Sexual'],['occ','Occult, magic & worldview','Worldview'],['subs','Alcohol, drugs & smoking','Substances'],['scary','Scary / intense themes','Scary'],['read','Reading difficulty','Reading']];
+const ratingH=r=>CATS.map(([k,l,s])=>r.ratings&&r.ratings[k]?`<span class="tag ${k==='read'?'':(r.ratings[k]<=2?'g':r.ratings[k]===3?'y':'r')}" title="${l}">${s} ${r.ratings[k]}/5</span>`:'').join('');
+const revCard=r=>`<div style="margin-bottom:6px"><span class="tag ${r.verdict==='approved'?'g':'r'}">${r.verdict==='approved'?'✅ Approved':'⛔ Disapproved'}</span> <b>${esc(r.by)}</b> <span class="mu">${r.date}</span></div><div>${ratingH(r)}${r.grade?`<span class="tag">Grade ${esc(r.grade)}</span>`:''}</div><p>${esc(r.summary)}</p>${r.notes?`<p class="mu">📝 ${esc(r.notes)}</p>`:''}`;
+const formH=i=>`<div class="fl"><label><input type="radio" name="vd${i}" value="approved" checked style="width:auto"> ✅ Approve</label><label><input type="radio" name="vd${i}" value="disapproved" style="width:auto"> ⛔ Disapprove</label></div><textarea id="s${i}" rows="3" placeholder="Summary — what is this book about?"></textarea><p class="mu" style="margin:10px 0 4px">Ratings: 1 = none / very low … 5 = heavy / very high</p><div class="fl2">${CATS.map(([k,l])=>`<label class="mu">${l}<select id="r${i}_${k}" style="width:100%"><option value="">—</option>${[1,2,3,4,5].map(n=>`<option>${n}</option>`).join('')}</select></label>`).join('')}</div><div class="fl2" style="margin-top:8px"><input id="g${i}" placeholder="Recommended grade / age (e.g. 7th+)"></div><textarea id="n${i}" rows="2" placeholder="Specific concerns, page numbers, content notes…" style="margin-top:8px"></textarea>`;
+function readForm(i){const s=$('#s'+i).value.trim();if(!s){toast('Write a summary first','var(--red)');return null}const ratings={};CATS.forEach(([k])=>{const v=$('#r'+i+'_'+k).value;if(v)ratings[k]=+v});return{verdict:document.querySelector(`input[name="vd${i}"]:checked`).value,summary:s,ratings,grade:$('#g'+i).value.trim(),notes:$('#n'+i).value.trim()}}
+function sync(i){const a=(db.reviews[i]||[]).find(r=>r.id===db.adopt[i]),e=db.registry[i]=db.registry[i]||{status:'pending',by:null,assigned:null,summary:''};
+ if(a){e.status=a.verdict==='approved'?'approved':'rejected';e.by=a.by;e.summary=a.summary;e.date=a.date}else{e.status='pending';e.by=null;e.summary=''}}
+function migrate(){let ch=0;if(!db.reviews){db.reviews={};db.adopt={};ch=1}
+ Object.entries(db.registry).forEach(([i,r])=>{if(r.status==='approved'&&!(db.reviews[i]||[]).length){db.reviews[i]=[{id:'m'+i,by:r.by||'Unknown',date:r.date||today(),verdict:'approved',summary:r.summary||'',ratings:{},grade:'',notes:''}];db.adopt[i]='m'+i;ch=1}});
+ if(!db.v7){Object.values(db.books).forEach(b=>{if(b.tags&&b.tags.length){b.kw=[...(b.kw||[]),...b.tags];b.tags=[]}});db.v7=1;ch=1}if(ch)save()}
+function render(){migrate();fixBc();nav();theme();$('#main').innerHTML=V[view]();if(V[view+'_'])V[view+'_']();stagger()}
+function proofTag(i){const r=db.registry[i];if(!r)return'<span class="tag">Not proofread</span>';const n=(db.reviews[i]||[]).length;
+ if(r.status==='approved')return'<span class="tag g">Approved</span>'+(n>1?`<span class="tag">${n} reviews</span>`:'');if(r.status==='rejected')return'<span class="tag r">Not approved</span>';return'<span class="tag y">Proofreading in progress</span>'}
+function submitRev(i,pid){const d=readForm(i);if(!d)return;const p=db.proofreaders.find(x=>x.id===pid);if(!p)return toast('Choose a proofreader','var(--red)');
+ const r={id:'r'+Date.now(),by:`${p.name} (${p.church})`,pid,date:today(),...d};(db.reviews[i]=db.reviews[i]||[]).push(r);db.adopt[i]=r.id;if(db.registry[i])db.registry[i].assigned=null;sync(i);save();closeAll();toast('Review saved — visible to every library');render()}
+function adopt(i,rid){db.adopt[i]=rid;sync(i);save();closeAll();toast('Your library now uses this review');render();detail(i)}
+function newRev(i){if(!db.proofreaders.length)return toast('Add a proofreader first','var(--red)');const o=document.createElement('div');o.className='ov';o.onclick=e=>{if(e.target===o)o.remove()};
+ o.innerHTML=`<div class="card"><h3 style="margin:0 0 8px">Your review: ${esc(book(i).title)}</h3><label class="mu">Proofreader<select id="cpr" style="width:100%">${db.proofreaders.map(p=>`<option value="${p.id}">${esc(p.name)} (${esc(p.church)})</option>`).join('')}</select></label><br><br>${formH(i)}<div class="fl"><button class="btn" onclick="submitRev('${i}',+$('#cpr').value)">Save review</button><button class="btn g" onclick="this.closest('.ov').remove()">Cancel</button></div></div>`;document.body.appendChild(o)}
+const _det7=detail;
+detail=function(i){_det7(i);const ov=[...document.querySelectorAll('.ov')].pop(),h=[...ov.querySelectorAll('h3')].find(x=>x.textContent==='Proofreading');if(!h)return;
+ let n=h.nextElementSibling;while(n&&n.tagName!=='H3'){const x=n.nextElementSibling;n.remove();n=x}
+ const rs=db.reviews[i]||[];h.textContent=`Proofreading reviews (${rs.length})`;
+ h.insertAdjacentHTML('afterend',(rs.map(r=>`<div class="card" style="margin:8px 0;${db.adopt[i]===r.id?'border:2px solid var(--ac)':''}">${revCard(r)}${db.adopt[i]===r.id?'<span class="tag g">★ Your library uses this review</span>':`<button class="btn g" onclick="adopt('${i}','${r.id}')">Use this review</button>`}</div>`).join('')||'<p class="mu">No reviews yet.</p>')+`<button class="btn g" onclick="newRev('${i}')">＋ Add my own / differing review</button>`)};
+/* manage proofreaders (with review form) */
+manage=()=>{const pend=Object.entries(db.registry).filter(([,r])=>r.status==='pending');
+ if(selPr){const p=db.proofreaders.find(x=>x.id===selPr);if(!p){selPr=null;return manage()}const mine=pend.filter(([,r])=>r.assigned===selPr);
+  return`<p><button class="btn g" onclick="selPr=null;render()">← Back</button> <button class="btn r" onclick="delPr(${selPr})">🗑 Remove proofreader</button></p><h3>${esc(p.name)} <span class="mu">${esc(p.church)}</span></h3>`+(mine.map(([i])=>`<div class="card" style="margin-bottom:12px"><div class="fl" style="flex-wrap:nowrap;align-items:center">${cov(i)}<div class="t">${esc(book(i).title)}</div></div>${formH(i)}<p><button class="btn" onclick="submitRev('${i}',${selPr})">Save review</button></p></div>`).join('')||'<p class="mu">No books assigned.</p>')+`<h3>Unassigned pending books</h3>`+(pend.filter(([,r])=>!r.assigned).map(([i])=>`<div class="row" style="cursor:default">${cov(i)}<div class="grow t">${esc(book(i).title)}</div><button class="btn" onclick="assign('${i}')">Assign to ${esc(p.name)}</button></div>`).join('')||'<p class="mu">None.</p>')}
+ return db.proofreaders.map(p=>`<div class="row" onclick="selPr=${p.id};render()"><div class="grow"><div class="t">${esc(p.name)}</div><div class="mu">${esc(p.church)}</div></div><span class="tag y">${pend.filter(([,r])=>r.assigned===p.id).length} assigned</span><button class="btn g" onclick="event.stopPropagation();delPr(${p.id})">🗑</button></div>`).join('')+`<h3>All pending (${pend.length})</h3>`+pend.map(([i,r])=>`<div class="mu">• ${esc(book(i).title)} — ${r.assigned?'assigned':'unassigned'}</div>`).join('')};
+/* checkout rule */
+function scanOut(v){const i=byCode(v);if(!v.trim())return;if(!i)return toast('Barcode not in catalog','var(--red)');const r=db.registry[i];
+ if(!r||r.status!=='approved')return toast(!r?'🚫 Not proofread yet — cannot be checked out':r.status==='rejected'?'🚫 Disapproved by your chosen review — cannot be checked out':'🚫 Awaiting proofreading — cannot be checked out yet','var(--red)');
+ if(loanOf(i))return toast('Already checked out','var(--red)');if(cart.includes(i))return;cart.push(i);$('#cart').innerHTML=cartH();toast('Scanned: '+book(i).title)}
+/* search: manual tags show; hidden keywords only searchable */
+const hay7=i=>{const b=book(i);return nz([i,b.title,b.author,b.genre,(b.tags||[]).join(' '),(b.kw||[]).join(' '),b.desc].join(' '))};
+function bres(){const ws=nz(($('#bq')||{value:''}).value).split(/\s+/).filter(Boolean);
+ $('#bres').innerHTML=db.catalog.filter(i=>{const h=hay7(i);return ws.every(w=>h.includes(w))}).filter(i=>{const r=db.registry[i];return bf==='all'||(bf==='in'&&!loanOf(i))||(bf==='out'&&loanOf(i))||(bf==='ok'&&r&&r.status==='approved')||(bf==='pend'&&(!r||r.status!=='approved'))}).map(i=>{const l=loanOf(i);
+ return`<div class="bk" onclick="detail('${i}')">${cov(i)}<div class="t">${esc(book(i).title)}</div><div class="mu">${esc(book(i).author)}</div>${l?'<span class="tag r">Out</span>':'<span class="tag g">Available</span>'}${proofTag(i)}${(book(i).tags||[]).slice(0,3).map(t=>`<span class="tag" style="background:var(--ac)">${esc(t)}</span>`).join('')}</div>`}).join('')||'<p class="mu">No books found.</p>'}
+/* add flow: reviews list, tags + genre while adding */
+const parseTags=s=>s.split(',').map(x=>x.trim()).filter(Boolean);
+const covB=b=>{const h=Math.abs([...String(b.isbn)].reduce((a,c)=>a*31+c.charCodeAt(0)|0,7))%360;return`<div class="cv" style="background:linear-gradient(145deg,hsl(${h},62%,46%),hsl(${(h+45)%360},66%,28%))"><span>${esc(b.title)}</span>${b.cover?`<img src="${esc(b.cover)}" onerror="this.remove()">`:''}</div>`};
+function showAdd(){const c=cur,mine=db.catalog.includes(c.isbn),rs=db.reviews[c.isbn]||[],r=db.registry[c.isbn];
+ const head=c.manual?`<p class="mu">Couldn't fetch details. Enter them manually:</p><input id="mt" placeholder="Title" value="${esc(c.title)}" oninput="cur.title=this.value"><br><br><input id="ma" placeholder="Author" value="${esc(c.author)}" oninput="cur.author=this.value"><br><br>`:`<div class="row" style="cursor:default">${covB(c)}<div><div class="t">${esc(c.title)}</div><div class="mu">${esc(c.author)} · ${c.isbn}</div></div></div>`;
+ const tg=mine?'':`<div class="fl2" style="margin:10px 0"><input id="atg" placeholder="Tags to show on this book (optional, comma separated)"><input id="ag" placeholder="Genre (optional)"></div>`;
+ let st;
+ if(rs.length)st=`<h3>Proofreading reviews (${rs.length})</h3>`+rs.map(rv=>`<div class="card" style="margin:8px 0">${revCard(rv)}<button class="btn" ${mine?'disabled':''} onclick="addCat('${rv.id}')">${mine?'Already in your catalog':'Agree &amp; add with this review'}</button></div>`).join('')+`<button class="btn g" onclick="queue()">I disagree — send to my proofreaders</button>`;
+ else if(r&&r.status==='pending')st=`<p>${proofTag(c.isbn)}</p><button class="btn" ${mine?'disabled':''} onclick="addCat()">${mine?'Already in your catalog':'Add to my catalog (pending)'}</button>`;
+ else st=`<p>${proofTag(c.isbn)} Nobody has proofread this yet.</p><button class="btn" onclick="queue()">Add to proofreading list</button>`;
+ $('#addres').innerHTML=`<div class="card">${head}${tg}${st}</div>`}
+function addCat(rid){if(!cur.title)return toast('Enter a title first','var(--red)'),0;if(db.catalog.includes(cur.isbn))return 0;const bc=takeBc();if(!bc)return 0;const t=$('#atg'),g=$('#ag');
+ db.books[cur.isbn]={isbn:cur.isbn,title:cur.title,author:cur.author,cover:cur.cover||olCover(cur.isbn),year:cur.year||'',genre:g?g.value.trim():'',tags:t?parseTags(t.value):[],kw:cur.tags||cur.kw||[],bc};
+ db.catalog.push(cur.isbn);if(rid){db.adopt[cur.isbn]=rid;sync(cur.isbn)}save();toast('Added — print its barcode label');showAdd();showLabels([cur.isbn]);return 1}
+function queue(){const had=db.catalog.includes(cur.isbn);if(had||addCat()){if(!db.registry[cur.isbn]||db.registry[cur.isbn].status!=='pending'){db.adopt[cur.isbn]=null;sync(cur.isbn)}save();showAdd()}}
+render();
+</script></body></html>
